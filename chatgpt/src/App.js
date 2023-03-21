@@ -1,9 +1,19 @@
 import logo from "./logo.svg";
 import "./App.css";
-import { useState } from "react";
+import { useState, CSSProperties } from "react";
+import ClipLoader from "react-spinners/ClipLoader";
 
 function App() {
   const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(true);
+  const [color, setColor] = useState("#cf21cf");
+
+  const override = {
+    display: "block",
+    margin: "0 auto",
+    borderColor: "#cf21cf",
+  };
   const [chatLog, setChatLog] = useState([
     {
       user: "gpt",
@@ -19,35 +29,38 @@ function App() {
   async function handleSubmit(e) {
     e.preventDefault();
 
-   let chatLogNew = [...chatLog,{user:"me",message:`${input}`}];
+    let chatLogNew = [...chatLog, { user: "me", message: `${input}` }];
 
-   const messages = chatLogNew.map((message) => message.message).join("\n")
+    const messages = chatLogNew.map((message) => message.message).join("\n");
 
     setInput("");
-    setChatLog(chatLogNew)
-
-
-    const response = await fetch("http://localhost:4000/",{
-
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json"
-    },
-    body:JSON.stringify({
-      message:messages
-    })
+    setChatLog(chatLogNew);
+    setLoading(true)
+    const response = await fetch("http://localhost:4000/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        message: messages,
+      }),
     });
 
     const data = await response.json();
+    setLoading(false)
+    setChatLog([...chatLogNew, { user: "gpt", message: `${data.message}` }]);
+    console.log(data.message);
+  }
 
-    setChatLog([...chatLogNew,{user:'gpt',message:`${data.message}`}])
-    console.log(data.message)
+  const handleInput = () => {
+
+    setOpen(!open)
   }
 
   return (
     <div className="App">
       <div className="sidemenu">
-        <div className="side-menu-button">
+        <div className="side-menu-button" onClick={handleInput}>
           <span>+</span>
           New Chat
         </div>
@@ -57,7 +70,27 @@ function App() {
           {chatLog.map((message, index) => (
             <ChatMessage key={index} message={message} />
           ))}
+
+          {
+            loading && 
+
+            <div className="loader">
+            <ClipLoader
+              color={color}
+              loading={loading}
+              cssOverride={override}
+              size={100}
+              aria-label="Loading Spinner"
+              data-testid="loader"
+            />
+
+            <span>Let me think...</span>
+          </div>
+          }
         </div>
+
+        {open && 
+        
         <div className="chat-input-holder">
           <form onSubmit={handleSubmit}>
             <input
@@ -67,8 +100,15 @@ function App() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
             ></input>
+
+            <span className="hide-input" onClick={handleInput}>Hide</span>
           </form>
+
+         
         </div>
+        
+        
+        }
       </div>
     </div>
   );
@@ -96,7 +136,9 @@ const ChatMessage = ({ message }) => {
           )}
         </div>
 
-        <div className="message">{message.message}</div>
+        <div className="message" style={{ whiteSpace: "pre-wrap" }}>
+          {message.message}
+        </div>
       </div>
     </div>
   );

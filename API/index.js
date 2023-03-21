@@ -1,45 +1,66 @@
-const  { Configuration, OpenAIApi } = require("openai");
+const { Configuration, OpenAIApi } = require("openai");
 const cors = require("cors");
-const dotenv=require("dotenv");
- const express = require('express');
- dotenv.config();
- const bodyParser = require('body-parser')
+const express = require("express");
+const bodyParser = require("body-parser");
+require("dotenv").config();
 const configuration = new Configuration({
-    organization: "org-HVrC297azLgB4GqL2joFeqEa",
-    apiKey: process.env.OPEN_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY,
 });
 const openai = new OpenAIApi(configuration);
 
 const app = express();
-app.use(bodyParser.json())
-app.use(cors())
+app.use(bodyParser.json());
+app.use(cors());
+const port = 4000;
+const history = [];
 
-const port=4000;
+app.post("/", async (req, res) => {
+  const { message } = req.body;
 
-app.post('/', async(req,res) =>{
+  const messages = [
+    {
+      role: "system",
+      content:
+        "You are a teacher who can teach physics,biology,chemistry.",
+    },
+    {
+        role: "system",
+        content:
+          "Don't answer questions outside physics,biology,chemistry.",
+      },
+  ];
+  for (const [input_text, completion_text] of history) {
+    messages.push({ role: "user", content: input_text });
+    messages.push({ role: "assistant", content: completion_text });
+  }
 
-    const {message} = req.body;
+  messages.push({ role: "user", content: message });
 
-    const response = await openai.createCompletion({
+  try {
+    const completion = await openai.createChatCompletion({
+      model: "gpt-3.5-turbo",
+      messages: messages,
+    });
 
-        model:"text-davinci-003",
-        prompt:`${message}`,
-        max_tokens:500,
-        temperature:0.5,
-    }) ;
+    const completion_text = completion.data.choices[0].message.content;
+    console.log(completion_text);
+    res.json({ message: completion_text });
 
-   
-    res.json({message:response.data.choices[0].text})
-})
+    history.push([message, completion_text]);
+  } catch (error) {
+    if (error.response) {
+      console.log(error.response.status);
+      console.log(error.response.data);
+    } else {
+      console.log(error.message);
+    }
+  }
+});
 
-app.listen(port,() => {
-
-    console.log(`The server is running on port ${port}`)
-})
-
-
+app.listen(port, () => {
+  console.log(`The server is running on port ${port}`);
+});
 
 //const response = await openai.listEngines();
-
 
 //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
