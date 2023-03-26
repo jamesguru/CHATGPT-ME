@@ -18,16 +18,7 @@ app.post("/", async (req, res) => {
   const { message } = req.body;
 
   const messages = [
-    {
-      role: "system",
-      content:
-        "You are a teacher who can teach physics,biology,chemistry.",
-    },
-    {
-        role: "system",
-        content:
-          "Don't answer questions outside physics,biology,chemistry.",
-      },
+   
   ];
   for (const [input_text, completion_text] of history) {
     messages.push({ role: "user", content: input_text });
@@ -48,12 +39,8 @@ app.post("/", async (req, res) => {
 
     history.push([message, completion_text]);
   } catch (error) {
-    if (error.response) {
-      console.log(error.response.status);
-      console.log(error.response.data);
-    } else {
-      console.log(error.message);
-    }
+    console.log(error)
+    res.json({message:'something went wrong'})
   }
 });
 

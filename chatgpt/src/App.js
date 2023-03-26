@@ -2,7 +2,7 @@ import logo from "./logo.svg";
 import "./App.css";
 import { useState, CSSProperties } from "react";
 import ClipLoader from "react-spinners/ClipLoader";
-
+import JsPDF from 'jspdf';
 function App() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -17,14 +17,13 @@ function App() {
   const [chatLog, setChatLog] = useState([
     {
       user: "gpt",
-      message: "How can I help you today?",
+      message: "Hi, how can I help you today?",
     },
 
-    {
-      user: "me",
-      message: "I wanted to use chatgpt today",
-    },
   ]);
+
+ 
+  
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -57,6 +56,20 @@ function App() {
     setOpen(!open)
   }
 
+  const clear= ()=>{
+    setChatLog([]);
+  }
+
+
+  const generatePDF = () => {
+
+    const report = new JsPDF('landscape','pt','a3');
+    report.html(document.querySelector('.chartbox')).then(() => {
+        report.save('report.pdf');
+    });
+
+  }
+
   return (
     <div className="App">
       <div className="sidemenu">
@@ -64,6 +77,8 @@ function App() {
           <span>+</span>
           New Chat
         </div>
+        <button onClick={generatePDF}>Export chat</button>
+        <span className="clear" onClick={clear}>Clear</span>
       </div>
       <div className="chartbox">
         <div className="chat-log">
@@ -84,7 +99,7 @@ function App() {
               data-testid="loader"
             />
 
-            <span>Let me think...</span>
+            <span>loading...</span>
           </div>
           }
         </div>
